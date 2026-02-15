@@ -1,6 +1,0 @@
-First --- Table Creation.SQL
-Second --- Transaction Types Creation.SQL
-Third --- Currency Insertion.SQL
-
-
-Deletion --- Database Cleanup.SQL
