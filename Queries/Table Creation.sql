@@ -2,20 +2,18 @@
 -- 1. Database Creation (Optional - Execute in 'master' if needed)
 -- =================================================================
 
-IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'MoneyMattersDb')
-BEGIN
-    CREATE DATABASE MoneyMattersDb;
-END
-GO
+-- IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'MoneyMattersDB')
+-- BEGIN
+--     CREATE DATABASE MoneyMattersDB;
+-- END
+-- GO
 
-USE MoneyMattersDb;
+USE MoneyMattersDB;
 GO
 
 -- Assuming the script is executed in the target database.
 
--- Set a default schema if not using 'dbo' (best practice is to explicitly use 'dbo')
--- CREATE SCHEMA Core;
--- GO
+
 
 -- =================================================================
 -- 2. Currencies Table
@@ -54,10 +52,6 @@ CREATE TABLE dbo.Users (
 );
 GO
 
--- Index on IsActive for filtering
--- CREATE NONCLUSTERED INDEX IX_Users_IsActive ON dbo.Users (IsActive);
--- GO
-
 -- =================================================================
 -- 4. Accounts Table
 -- =================================================================
@@ -75,10 +69,6 @@ CREATE TABLE dbo.Accounts (
         REFERENCES dbo.Users (UserID)
 );
 GO
-
--- Index on the FK for faster joins and lookups
--- CREATE NONCLUSTERED INDEX IX_Accounts_AccountHolder ON dbo.Accounts (AccountHolder);
--- GO
 
 -- =================================================================
 -- 5. Banks Table
@@ -98,9 +88,6 @@ CREATE TABLE dbo.Banks (
         REFERENCES dbo.Accounts (AccountID)
 );
 GO
-
--- CREATE NONCLUSTERED INDEX IX_Banks_AccountID ON dbo.Banks (AccountID);
--- GO
 
 -- =================================================================
 -- 6. TransactionTypes Table
@@ -134,9 +121,6 @@ CREATE TABLE dbo.TransactionSubtypes (
 );
 GO
 
--- CREATE NONCLUSTERED INDEX IX_TransactionSubtypes_TransactionTypeID ON dbo.TransactionSubtypes (TransactionTypeID);
--- GO
-
 -- =================================================================
 -- 8. Transactions Table
 -- =================================================================
@@ -148,6 +132,8 @@ CREATE TABLE dbo.Transactions (
     BankID INT NOT NULL,               -- FK to Banks.BankID (The account/bank that conducted the transaction)
     CurrencyID INT NOT NULL,           -- FK to Currencies.CurrencyID
     TransactionAmount DECIMAL(18, 4) NOT NULL, -- Using DECIMAL for financial precision
+    ForeignCurrencyID INT NOT NULL,    -- FK to Currencies.CurrencyID
+    ForeignTransactionAmount DECIMAL(18, 4) NOT NULL, -- Using DECIMAL for financial precision
     IsCredited BIT NOT NULL,           -- TRUE for income/credit, FALSE for expense/debit
     Description NVARCHAR(500) NULL,
     CreatedTimestamp DATETIME2(7) NOT NULL CONSTRAINT DF_Transactions_CreatedTimestamp DEFAULT (SYSDATETIME()),
@@ -160,41 +146,9 @@ CREATE TABLE dbo.Transactions (
         REFERENCES dbo.Banks (BankID),
     CONSTRAINT FK_Transactions_CurrencyID FOREIGN KEY (CurrencyID)
         REFERENCES dbo.Currencies (CurrencyID),
+    CONSTRAINT FK_Transactions_ForeignCurrencyID FOREIGN KEY (ForeignCurrencyID)
+        REFERENCES dbo.Currencies (CurrencyID),
     -- Ensure transaction amount is non-negative
-    CONSTRAINT CHK_Transactions_AmountPositive CHECK (TransactionAmount >= 0)
+    CONSTRAINT CHK_Transactions_AmountPositive CHECK (TransactionAmount >= 0 and ForeignTransactionAmount >= 0)
 );
 GO
-
--- Composite index for the most common queries (e.g., "show me all transactions for this bank in date range")
--- CREATE NONCLUSTERED INDEX IX_Transactions_BankID_CreatedTimestamp
---    ON dbo.Transactions (BankID, CreatedTimestamp DESC)
---    INCLUDE (TransactionAmount, IsCredited);
--- GO
-
----- Index for categorization lookups
--- CREATE NONCLUSTERED INDEX IX_Transactions_TransactionSubtypeID ON dbo.Transactions (TransactionSubtypeID);
--- GO
-
----- Index for currency lookups (if needed for conversions)
--- CREATE NONCLUSTERED INDEX IX_Transactions_CurrencyID ON dbo.Transactions (CurrencyID);
--- GO
-
--- =================================================================
--- 9. Stored Procedure for Updating Timestamp (Best Practice)
--- =================================================================
--- Best practice: Use a stored procedure or trigger to manage UpdatedTimestamp
-/*
--- Example Trigger (for Azure SQL or SQL Server)
-CREATE TRIGGER TR_Users_UpdateTimestamp
-ON dbo.Users
-AFTER UPDATE
-AS
-BEGIN
-    SET NOCOUNT ON;
-    UPDATE U
-    SET UpdatedTimestamp = SYSDATETIME()
-    FROM dbo.Users AS U
-    INNER JOIN inserted AS I ON U.UserID = I.UserID;
-END
-GO
-*/
