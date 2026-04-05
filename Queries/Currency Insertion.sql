@@ -1,6 +1,3 @@
-USE [MoneyMattersDb];
-GO
-
 -- SET IDENTITY_INSERT dbo.Currencies OFF; 
 -- Ensure identity insertion is off if it was accidentally turned on
 

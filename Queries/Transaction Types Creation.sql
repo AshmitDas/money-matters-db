@@ -1,7 +1,3 @@
--- Put the target database name
-USE [MoneyMattersDb];
-GO
-
 -- =================================================================
 -- 1. INSERT INTO dbo.TransactionTypes (Categories)
 -- =================================================================
