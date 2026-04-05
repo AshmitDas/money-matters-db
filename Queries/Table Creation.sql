@@ -1,22 +1,5 @@
 -- =================================================================
--- 1. Database Creation (Optional - Execute in 'master' if needed)
--- =================================================================
-
--- IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'MoneyMattersDB')
--- BEGIN
---     CREATE DATABASE MoneyMattersDB;
--- END
--- GO
-
-USE MoneyMattersDB;
-GO
-
--- Assuming the script is executed in the target database.
-
-
-
--- =================================================================
--- 2. Currencies Table
+-- 1. Currencies Table
 -- =================================================================
 -- Small reference table - Clustered index on PK is fine.
 IF OBJECT_ID('dbo.Currencies', 'U') IS NOT NULL DROP TABLE dbo.Currencies;
@@ -33,7 +16,7 @@ CREATE TABLE dbo.Currencies (
 GO
 
 -- =================================================================
--- 3. Users Table
+-- 2. Users Table
 -- =================================================================
 IF OBJECT_ID('dbo.Users', 'U') IS NOT NULL DROP TABLE dbo.Users;
 CREATE TABLE dbo.Users (
@@ -52,45 +35,28 @@ CREATE TABLE dbo.Users (
 );
 GO
 
--- =================================================================
--- 4. Accounts Table
--- =================================================================
--- Stores the user's financial accounts (e.g., Personal Savings, Joint Checking)
-IF OBJECT_ID('dbo.Accounts', 'U') IS NOT NULL DROP TABLE dbo.Accounts;
-CREATE TABLE dbo.Accounts (
-    AccountID INT IDENTITY(1,1) NOT NULL,
-    AccountHolder INT NOT NULL, -- FK to Users.UserID
-    AccountName NVARCHAR(100) NOT NULL,
-    CreatedTimestamp DATETIME2(7) NOT NULL CONSTRAINT DF_Accounts_CreatedTimestamp DEFAULT (SYSDATETIME()),
-    UpdatedTimestamp DATETIME2(7) NULL,
-
-    CONSTRAINT PK_Accounts PRIMARY KEY CLUSTERED (AccountID ASC),
-    CONSTRAINT FK_Accounts_AccountHolder FOREIGN KEY (AccountHolder)
-        REFERENCES dbo.Users (UserID)
-);
-GO
 
 -- =================================================================
--- 5. Banks Table
+-- 3. Banks Table
 -- =================================================================
 -- Stores bank/financial institution details associated with an Account
 IF OBJECT_ID('dbo.Banks', 'U') IS NOT NULL DROP TABLE dbo.Banks;
 CREATE TABLE dbo.Banks (
     BankID INT IDENTITY(1,1) NOT NULL,
-    AccountID INT NOT NULL, -- FK to Accounts.AccountID (linking bank details to an account)
+    UserID INT NOT NULL, -- FK to Users.UserID (linking bank details to an User)
     BankName NVARCHAR(100) NOT NULL,
     BankDescription NVARCHAR(255) NULL,
     CreatedTimestamp DATETIME2(7) NOT NULL CONSTRAINT DF_Banks_CreatedTimestamp DEFAULT (SYSDATETIME()),
     UpdatedTimestamp DATETIME2(7) NULL,
 
     CONSTRAINT PK_Banks PRIMARY KEY CLUSTERED (BankID ASC),
-    CONSTRAINT FK_Banks_AccountID FOREIGN KEY (AccountID)
-        REFERENCES dbo.Accounts (AccountID)
+    CONSTRAINT FK_Banks_UserID FOREIGN KEY (UserID)
+        REFERENCES dbo.Users (UserID)
 );
 GO
 
 -- =================================================================
--- 6. TransactionTypes Table
+-- 4. TransactionTypes Table
 -- =================================================================
 -- Stores major categories (e.g., Food, Shopping, Investment)
 IF OBJECT_ID('dbo.TransactionTypes', 'U') IS NOT NULL DROP TABLE dbo.TransactionTypes;
@@ -104,7 +70,7 @@ CREATE TABLE dbo.TransactionTypes (
 GO
 
 -- =================================================================
--- 7. TransactionSubtypes Table
+-- 5. TransactionSubtypes Table
 -- =================================================================
 -- Stores sub-categories for finer granularity (e.g., Food -> Groceries, Food -> Restaurant)
 IF OBJECT_ID('dbo.TransactionSubtypes', 'U') IS NOT NULL DROP TABLE dbo.TransactionSubtypes;
@@ -122,7 +88,7 @@ CREATE TABLE dbo.TransactionSubtypes (
 GO
 
 -- =================================================================
--- 8. Transactions Table
+-- 6. Transactions Table
 -- =================================================================
 -- The main fact table, potentially the largest
 IF OBJECT_ID('dbo.Transactions', 'U') IS NOT NULL DROP TABLE dbo.Transactions;
