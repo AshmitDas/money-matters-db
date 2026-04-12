@@ -15,48 +15,26 @@ CREATE TABLE dbo.Currencies (
 );
 GO
 
--- =================================================================
--- 2. Users Table
--- =================================================================
-IF OBJECT_ID('dbo.Users', 'U') IS NOT NULL DROP TABLE dbo.Users;
-CREATE TABLE dbo.Users (
-    UserID INT IDENTITY(1,1) NOT NULL,
-    Email NVARCHAR(255) NOT NULL,
-    Username NVARCHAR(50) NOT NULL,
-    PasswordHash CHAR(60) NOT NULL, -- Using CHAR for a fixed-length hash like bcrypt
-    CreatedTimestamp DATETIME2(7) NOT NULL CONSTRAINT DF_Users_CreatedTimestamp DEFAULT (SYSDATETIME()),
-    IsActive BIT NOT NULL CONSTRAINT DF_Users_IsActive DEFAULT (1), -- Default to active
-    UpdatedTimestamp DATETIME2(7) NULL, -- Nullable, updated on modification
-
-    CONSTRAINT PK_Users PRIMARY KEY CLUSTERED (UserID ASC),
-    -- Unique constraints as specified
-    CONSTRAINT UQ_Users_Email UNIQUE NONCLUSTERED (Email),
-    CONSTRAINT UQ_Users_Username UNIQUE NONCLUSTERED (Username)
-);
-GO
-
 
 -- =================================================================
--- 3. Banks Table
+-- 2. BankAccounts Table
 -- =================================================================
--- Stores bank/financial institution details associated with an Account
+-- Stores bank/financial details associated with an Account
 IF OBJECT_ID('dbo.BankAccounts', 'U') IS NOT NULL DROP TABLE dbo.Banks;
 CREATE TABLE dbo.BankAccounts (
     BankAccountID INT IDENTITY(1,1) NOT NULL,
-    UserID INT NOT NULL, -- FK to Users.UserID (linking bank details to an User)
+    UserOid UNIQUEIDENTIFIER NOT NULL, -- Azure AD Object ID
     BankAccountName NVARCHAR(100) NOT NULL,
     BankAccountDescription NVARCHAR(255) NULL,
     CreatedTimestamp DATETIME2(7) NOT NULL CONSTRAINT DF_Banks_CreatedTimestamp DEFAULT (SYSDATETIME()),
     UpdatedTimestamp DATETIME2(7) NULL,
 
-    CONSTRAINT PK_BankAccounts PRIMARY KEY CLUSTERED (BankAccountID ASC),
-    CONSTRAINT FK_BankAccount_UserID FOREIGN KEY (UserID)
-        REFERENCES dbo.Users (UserID)
+    CONSTRAINT PK_BankAccounts PRIMARY KEY CLUSTERED (BankAccountID ASC)
 );
 GO
 
 -- =================================================================
--- 4. TransactionTypes Table
+-- 3. TransactionTypes Table
 -- =================================================================
 -- Stores major categories (e.g., Food, Shopping, Investment)
 IF OBJECT_ID('dbo.TransactionTypes', 'U') IS NOT NULL DROP TABLE dbo.TransactionTypes;
@@ -70,7 +48,7 @@ CREATE TABLE dbo.TransactionTypes (
 GO
 
 -- =================================================================
--- 5. TransactionSubtypes Table
+-- 4. TransactionSubtypes Table
 -- =================================================================
 -- Stores sub-categories for finer granularity (e.g., Food -> Groceries, Food -> Restaurant)
 IF OBJECT_ID('dbo.TransactionSubtypes', 'U') IS NOT NULL DROP TABLE dbo.TransactionSubtypes;
@@ -88,7 +66,7 @@ CREATE TABLE dbo.TransactionSubtypes (
 GO
 
 -- =================================================================
--- 6. Transactions Table
+-- 5. Transactions Table
 -- =================================================================
 -- The main fact table, potentially the largest
 IF OBJECT_ID('dbo.Transactions', 'U') IS NOT NULL DROP TABLE dbo.Transactions;
