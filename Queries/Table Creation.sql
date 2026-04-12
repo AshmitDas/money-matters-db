@@ -40,17 +40,17 @@ GO
 -- 3. Banks Table
 -- =================================================================
 -- Stores bank/financial institution details associated with an Account
-IF OBJECT_ID('dbo.Banks', 'U') IS NOT NULL DROP TABLE dbo.Banks;
-CREATE TABLE dbo.Banks (
-    BankID INT IDENTITY(1,1) NOT NULL,
+IF OBJECT_ID('dbo.BankAccounts', 'U') IS NOT NULL DROP TABLE dbo.Banks;
+CREATE TABLE dbo.BankAccounts (
+    BankAccountID INT IDENTITY(1,1) NOT NULL,
     UserID INT NOT NULL, -- FK to Users.UserID (linking bank details to an User)
-    BankName NVARCHAR(100) NOT NULL,
-    BankDescription NVARCHAR(255) NULL,
+    BankAccountName NVARCHAR(100) NOT NULL,
+    BankAccountDescription NVARCHAR(255) NULL,
     CreatedTimestamp DATETIME2(7) NOT NULL CONSTRAINT DF_Banks_CreatedTimestamp DEFAULT (SYSDATETIME()),
     UpdatedTimestamp DATETIME2(7) NULL,
 
-    CONSTRAINT PK_Banks PRIMARY KEY CLUSTERED (BankID ASC),
-    CONSTRAINT FK_Banks_UserID FOREIGN KEY (UserID)
+    CONSTRAINT PK_BankAccounts PRIMARY KEY CLUSTERED (BankAccountID ASC),
+    CONSTRAINT FK_BankAccount_UserID FOREIGN KEY (UserID)
         REFERENCES dbo.Users (UserID)
 );
 GO
@@ -95,7 +95,7 @@ IF OBJECT_ID('dbo.Transactions', 'U') IS NOT NULL DROP TABLE dbo.Transactions;
 CREATE TABLE dbo.Transactions (
     TransactionID BIGINT IDENTITY(1,1) NOT NULL, -- Using BIGINT for a potentially massive transaction count
     TransactionSubtypeID INT NOT NULL, -- FK to TransactionSubtypes.TransactionSubtypeID
-    BankID INT NOT NULL,               -- FK to Banks.BankID (The account/bank that conducted the transaction)
+    BankAccountID INT NOT NULL,               -- FK to Banks.BankAccountID (The bank account that conducted the transaction)
     CurrencyID INT NOT NULL,           -- FK to Currencies.CurrencyID
     TransactionAmount DECIMAL(18, 4) NOT NULL, -- Using DECIMAL for financial precision
     ForeignCurrencyID INT NOT NULL,    -- FK to Currencies.CurrencyID
@@ -108,8 +108,8 @@ CREATE TABLE dbo.Transactions (
     CONSTRAINT PK_Transactions PRIMARY KEY CLUSTERED (TransactionID ASC),
     CONSTRAINT FK_Transactions_TransactionSubtypeID FOREIGN KEY (TransactionSubtypeID)
         REFERENCES dbo.TransactionSubtypes (TransactionSubtypeID),
-    CONSTRAINT FK_Transactions_BankID FOREIGN KEY (BankID)
-        REFERENCES dbo.Banks (BankID),
+    CONSTRAINT FK_Transactions_BankAccountID FOREIGN KEY (BankAccountID)
+        REFERENCES dbo.BankAccounts (BankAccountID),
     CONSTRAINT FK_Transactions_CurrencyID FOREIGN KEY (CurrencyID)
         REFERENCES dbo.Currencies (CurrencyID),
     CONSTRAINT FK_Transactions_ForeignCurrencyID FOREIGN KEY (ForeignCurrencyID)
